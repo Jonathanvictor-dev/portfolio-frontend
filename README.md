@@ -42,7 +42,7 @@ Para visualizar o projeto, basta um navegador moderno. No entanto, se você dese
 3. **Compilar o Tailwind CSS (Modo Watch):**
    Se você fizer alterações nas classes CSS no HTML, execute o comando abaixo para atualizar o arquivo `output.css`:
    ```bash
-   npx tailwindcss -i ./css/input.css -o ./css/output.css --watch
+   npx tailwindcss -i ./css/style.css -o ./css/output.css --watch
    ```
 
 4. **Abrir o projeto:**
