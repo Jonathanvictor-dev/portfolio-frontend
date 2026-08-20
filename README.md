@@ -2,6 +2,28 @@
 
 Este é um portfólio profissional desenvolvido com foco em performance, acessibilidade e design minimalista. O projeto utiliza uma arquitetura limpa e tecnologias modernas de front-end para garantir uma experiência de usuário fluida em todos os dispositivos.
 
+## 🔗 Integração com Backend
+
+Este projeto consome uma API REST desenvolvida em Node.js, responsável pelo gerenciamento das mensagens enviadas através do formulário de contato e pelas funcionalidades administrativas do portfólio.
+
+Repositório da API:
+
+- Backend: https://github.com/Jonathanvictor-dev/portfolio-contato-api
+
+Principais recursos disponibilizados pela API:
+
+- Envio de mensagens de contato
+- Autenticação administrativa com JWT
+- Gerenciamento de mensagens recebidas
+- Marcação de mensagens como lidas
+- Exclusão de mensagens
+- Bloqueio e desbloqueio de e-mails
+- Persistência de dados em PostgreSQL
+
+## 🌐 Deploy
+
+https://jonathanvictor-dev.github.io/portfolio-frontend
+
 ## 🛠️ Tecnologias e Ferramentas
 
 As seguintes tecnologias foram utilizadas na construção deste projeto:
