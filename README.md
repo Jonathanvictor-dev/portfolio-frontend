@@ -31,7 +31,7 @@ Para visualizar o projeto, basta um navegador moderno. No entanto, se você dese
 
 1. **Clonar o repositório:**
    ```bash
-   git clone https://github.com/Jonathanvictor-dev/portfolio.git
+   git clone https://github.com/Jonathanvictor-dev/portfolio-frontend.git
    ```
 
 2. **Instalar as dependências de desenvolvimento:**
