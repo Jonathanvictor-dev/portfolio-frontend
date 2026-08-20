@@ -1,6 +1,6 @@
 import { getMessages, getMessageById, markAsRead, deleteMessage } from './services/message.js';
 import { getBlockedEmails, blockEmail, unblockEmail } from './services/blocked.js';
-import { logout } from './services/auth.js';
+import { changePassword, logout } from './services/auth.js';
 
 const hasToken = Boolean(localStorage.getItem('token'));
 
@@ -238,6 +238,33 @@ const setupTabs = () => {
 };
 
 const setupEvents = () => {
+  query('#change-password')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    openModal('Alterar senha', `
+      <form id="change-password-form" class="space-y-4">
+        <div>
+          <label for="current-password" class="text-sm font-medium text-text-primary">Senha atual</label>
+          <input id="current-password" name="currentPassword" type="password" required class="mt-2 w-full px-4 py-3 rounded-lg bg-background border border-border text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/40">
+        </div>
+        <div>
+          <label for="new-password" class="text-sm font-medium text-text-primary">Nova senha</label>
+          <input id="new-password" name="newPassword" type="password" minlength="6" required class="mt-2 w-full px-4 py-3 rounded-lg bg-background border border-border text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/40">
+        </div>
+        <div>
+          <label for="confirm-password" class="text-sm font-medium text-text-primary">Confirmar nova senha</label>
+          <input id="confirm-password" name="confirmPassword" type="password" minlength="6" required class="mt-2 w-full px-4 py-3 rounded-lg bg-background border border-border text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/40">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="change-password-cancel" class="px-4 py-2 bg-background border border-border rounded-md text-text-secondary">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-accent text-white rounded-md">Salvar senha</button>
+        </div>
+      </form>
+    `);
+
+    query('#change-password-cancel').addEventListener('click', closeModal);
+    query('#change-password-form').addEventListener('submit', handleChangePassword);
+  });
+
   query('#logout')?.addEventListener('click', async (event) => {
     event.preventDefault();
 
@@ -263,6 +290,28 @@ const setupEvents = () => {
   query('#modalClose').addEventListener('click', closeModal);
   elements.modalOverlay.addEventListener('click', (event) => { if (event.target === elements.modalOverlay) closeModal(); });
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
+};
+
+const handleChangePassword = async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const currentPassword = form.currentPassword.value;
+  const newPassword = form.newPassword.value;
+  const confirmPassword = form.confirmPassword.value;
+
+  if (newPassword !== confirmPassword) {
+    showToast('A confirmação da nova senha não confere.', 'warning');
+    form.confirmPassword.focus();
+    return;
+  }
+
+  try {
+    await changePassword({ currentPassword, newPassword });
+    closeModal();
+    showToast('Senha alterada com sucesso.');
+  } catch (error) {
+    showToast(error.message || 'Não foi possível alterar a senha.', 'error');
+  }
 };
 
 const initialize = async () => {
