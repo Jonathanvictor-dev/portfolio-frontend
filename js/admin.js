@@ -1,229 +1,277 @@
-/* Admin JS - Vanilla ES6
-   For demo purposes uses in-memory data and mimics async loading. */
+import { getMessages, getMessageById, markAsRead, deleteMessage } from './services/message.js';
+import { getBlockedEmails, blockEmail, unblockEmail } from './services/blocked.js';
+import { logout } from './services/auth.js';
 
-const state = {
-  messages: [],
-  blocked: [],
-  loading: true,
+const hasToken = Boolean(localStorage.getItem('token'));
+
+if (!hasToken) {
+  window.location.replace('login.html');
 };
 
-// Utils
-const q = (s, el=document)=> el.querySelector(s);
-const qa = (s, el=document)=> Array.from(el.querySelectorAll(s));
+const state = { messages: [], blockedEmails: [] };
+const query = (selector) => document.querySelector(selector);
+const queryAll = (selector) => Array.from(document.querySelectorAll(selector));
+const elements = {
+  messagesTable: query('#messagesTbody'), blockedTable: query('#blockedTbody'), searchName: query('#searchName'),
+  searchEmail: query('#searchEmail'), filterStatus: query('#filterStatus'), blockForm: query('#blockForm'),
+  blockEmail: query('#blockEmail'), blockReason: query('#blockReason'), modalOverlay: query('#modalOverlay'),
+  modalTitle: query('#modalTitle'), modalContent: query('#modalContent'), confirmOverlay: query('#confirmOverlay'),
+  confirmText: query('#confirmText'), confirmCancel: query('#confirmCancel'), confirmOk: query('#confirmOk'),
+  toasts: query('#toasts'),
+};
 
-function formatDate(d){
-  const date = new Date(d);
-  return date.toLocaleString();
-}
+const escapeHtml = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+const unwrapData = (response) => response?.data ?? response;
+const getList = (response) => {
+  const data = unwrapData(response);
+  if (Array.isArray(data)) return data;
+  return data?.items ?? data?.messages ?? data?.blockedEmails ?? [];
+};
+const formatDate = (value) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Data não informada' : date.toLocaleString('pt-BR');
+};
+const getMessageId = (message) => message.id ?? message._id;
+const getBlockedEmail = (blocked) => blocked.email ?? blocked.address;
 
-function showToast(text, type='success'){
-  const toasts = q('#toasts');
-  const el = document.createElement('div');
-  el.className = `px-4 py-2 rounded-md shadow-md ${type==='error'? 'bg-red-600':'bg-accent'} text-white`;
-  el.textContent = text;
-  toasts.appendChild(el);
-  setTimeout(()=> el.remove(), 3500);
-}
+const showToast = (message, type = 'success') => {
+  const toast = document.createElement('div');
+  const colors = { success: 'bg-accent', error: 'bg-red-600', warning: 'bg-amber-500' };
+  toast.className = `translate-x-full opacity-0 px-4 py-2 rounded-md shadow-md text-white transition-all duration-300 ${colors[type] || colors.success}`;
+  toast.textContent = message;
+  elements.toasts.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.remove('translate-x-full', 'opacity-0'));
+  setTimeout(() => { toast.classList.add('translate-x-full', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3500);
+};
 
-function openModal(contentHtml){
-  const overlay = q('#modalOverlay');
-  q('#modalContent').innerHTML = contentHtml;
-  overlay.classList.remove('hidden');
-  overlay.classList.add('flex');
-}
+const openModal = (title, content) => {
+  elements.modalTitle.textContent = title;
+  elements.modalTitle.classList.toggle('hidden', !title);
+  elements.modalContent.innerHTML = content;
+  elements.modalOverlay.classList.remove('hidden');
+  elements.modalOverlay.classList.add('flex');
+};
 
-function closeModal(){
-  const overlay = q('#modalOverlay');
-  overlay.classList.add('hidden');
-  overlay.classList.remove('flex');
-}
+const closeModal = () => {
+  elements.modalOverlay.classList.add('hidden');
+  elements.modalOverlay.classList.remove('flex');
+};
 
-function openConfirm(text, onConfirm){
-  q('#confirmText').textContent = text;
-  const overlay = q('#confirmOverlay');
-  overlay.classList.remove('hidden');
-  overlay.classList.add('flex');
-  const ok = q('#confirmOk');
-  const cancel = q('#confirmCancel');
-  const cleanup = ()=>{ overlay.classList.add('hidden'); overlay.classList.remove('flex'); ok.removeEventListener('click', doOk); cancel.removeEventListener('click', doCancel); };
-  const doOk = ()=>{ cleanup(); onConfirm(); };
-  const doCancel = ()=>{ cleanup(); };
-  ok.addEventListener('click', doOk);
-  cancel.addEventListener('click', doCancel);
-}
-
-// Rendering
-function renderCounts(){
-  q('#countTotal').textContent = state.messages.length;
-  q('#countUnread').textContent = state.messages.filter(m=>!m.read).length;
-  q('#countRead').textContent = state.messages.filter(m=>m.read).length;
-  q('#countBlocked').textContent = state.blocked.length;
-}
-
-function renderMessages(){
-  const tbody = q('#messagesTbody');
-  tbody.innerHTML = '';
-
-  const filterName = q('#searchName').value.trim().toLowerCase();
-  const filterEmail = q('#searchEmail').value.trim().toLowerCase();
-  const status = q('#filterStatus').value;
-
-  let list = state.messages.filter(m=>{
-    if(filterName && !m.name.toLowerCase().includes(filterName)) return false;
-    if(filterEmail && !m.email.toLowerCase().includes(filterEmail)) return false;
-    if(status==='read' && !m.read) return false;
-    if(status==='unread' && m.read) return false;
-    return true;
-  });
-
-  if(list.length===0){
-    tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-text-secondary">Nenhuma mensagem encontrada</td></tr>`;
-    return;
-  }
-
-  list.forEach(m=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="px-4 py-3 align-top"><div class="font-semibold text-text-primary">${m.name}</div></td>
-      <td class="px-4 py-3 align-top">${m.email}</td>
-      <td class="px-4 py-3 align-top">${formatDate(m.date)}</td>
-      <td class="px-4 py-3 align-top">${m.read? '<span class="text-sm text-text-secondary">Lida</span>':'<span class="text-sm text-accent">Não Lida</span>'}</td>
-      <td class="px-4 py-3 align-top">
-        <div class="flex gap-2">
-          <button data-id="${m.id}" data-action="view" class="px-3 py-1 text-sm bg-transparent border border-border rounded">Visualizar</button>
-          ${m.read
-            ? `<button disabled aria-disabled="true" class="px-3 py-1 text-sm rounded" style="white-space: nowrap; flex-shrink: 0; background-color: #3f3f46; color: #a1a1aa; cursor: not-allowed;">Marcar como lida</button>`
-            : `<button data-id="${m.id}" data-action="mark" class="px-3 py-1 text-sm bg-accent text-white rounded" style="white-space: nowrap; flex-shrink: 0;">Marcar como lida</button>`
-          }
-          <button data-id="${m.id}" data-action="delete" class="px-3 py-1 text-sm bg-red-600 text-white rounded">Excluir</button>
-        </div>
-      </td>
-    `;
-    tbody.appendChild(tr);
-
-    // no mobile card (we use a single responsive table)
-  });
-}
-
-function renderBlocked(){
-  const tb = q('#blockedTbody');
-  tb.innerHTML = '';
-  if(state.blocked.length===0){
-    tb.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-text-secondary">Nenhum e-mail bloqueado</td></tr>`;
-    return;
-  }
-  state.blocked.forEach(b=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="px-4 py-3">${b.email}</td>
-      <td class="px-4 py-3">${b.reason}</td>
-      <td class="px-4 py-3">${formatDate(b.date)}</td>
-      <td class="px-4 py-3"><div class="flex gap-2"><button data-id="${b.id}" data-action="viewBlocked" class="px-3 py-1 border border-border rounded">Visualizar</button><button data-id="${b.id}" data-action="unblock" class="px-3 py-1 bg-accent text-white rounded">Remover</button></div></td>
-    `;
-    tb.appendChild(tr);
-  });
-}
-
-// Events
-function attachEvents(){
-  q('#searchName').addEventListener('input', debounce(renderMessages, 250));
-  q('#searchEmail').addEventListener('input', debounce(renderMessages, 250));
-  q('#filterStatus').addEventListener('change', renderMessages);
-
-  q('#messagesTbody').addEventListener('click', (e)=> handleTableAction(e));
-
-  qa('.tab-btn').forEach(btn=> btn.addEventListener('click', (e)=>{
-    qa('.tab-btn').forEach(b=>{
-      b.classList.remove('text-accent', 'text-text-primary');
-      b.classList.add('text-text-secondary');
-      b.setAttribute('aria-selected', 'false');
-    });
-    qa('.tab-panel').forEach(p=> p.classList.add('hidden'));
-    const tab = e.currentTarget.dataset.tab;
-    q(`#tab-${tab}`).classList.remove('hidden');
-    e.currentTarget.classList.remove('text-text-secondary');
-    e.currentTarget.classList.add('text-accent');
-    e.currentTarget.setAttribute('aria-selected', 'true');
-  }));
-
-  q('#modalClose').addEventListener('click', closeModal);
-
-  q('#refreshBtn').addEventListener('click', ()=>{ loadData(); showToast('Atualizado'); });
-
-  q('#blockForm').addEventListener('submit', (ev)=>{
-    ev.preventDefault();
-    const email = q('#blockEmail').value.trim();
-    const reason = q('#blockReason').value.trim() || 'Sem motivo informado';
-    if(!email) { showToast('Preencha o e-mail', 'error'); return; }
-    state.blocked.unshift({ id: id(), email, reason, date: new Date() });
-    renderBlocked(); renderCounts(); showToast('E-mail bloqueado');
-    q('#blockForm').reset();
-  });
-
-  // confirm overlay close by clicking outside
-  q('#confirmOverlay').addEventListener('click', (e)=>{ if(e.target===e.currentTarget) e.currentTarget.classList.add('hidden'); });
-  q('#modalOverlay').addEventListener('click', (e)=>{ if(e.target===e.currentTarget) closeModal(); });
-}
-
-function handleTableAction(e){
-  const btn = e.target.closest('button');
-  if(!btn) return;
-  const idAttr = btn.dataset.id;
-  const action = btn.dataset.action;
-  if(action==='view'){
-    const m = state.messages.find(x=>x.id===idAttr);
-    openModal(`<p class="text-sm"><strong>Nome:</strong> ${m.name}</p><p class="text-sm"><strong>E-mail:</strong> ${m.email}</p><p class="text-sm"><strong>Data:</strong> ${formatDate(m.date)}</p><p class="mt-4 text-text-secondary">${m.content}</p>`);
-  }
-  if(action==='mark'){
-    const idx = state.messages.findIndex(x=>x.id===idAttr);
-    if(idx>-1){
-      if(state.messages[idx].read) return;
-      state.messages[idx].read = true;
-      renderMessages();
-      renderCounts();
-      showToast('Marcado como lida');
-    }
-  }
-  if(action==='delete'){
-    const message = state.messages.find(x=>x.id===idAttr);
-    const personName = message?.name || 'esta pessoa';
-    openConfirm(`Deseja excluir a mensagem de ${personName}?`, ()=>{ state.messages = state.messages.filter(x=>x.id!==idAttr); renderMessages(); renderCounts(); showToast('Mensagem excluída'); });
-  }
-  if(action==='viewBlocked'){
-    const b = state.blocked.find(x=>x.id===idAttr);
-    openModal(`<p class="text-sm"><strong>E-mail:</strong> ${b.email}</p><p class="text-sm"><strong>Motivo:</strong> ${b.reason}</p><p class="text-sm"><strong>Data:</strong> ${formatDate(b.date)}</p>`);
-  }
-  if(action==='unblock'){
-    openConfirm('Remover bloqueio deste e-mail?', ()=>{ state.blocked = state.blocked.filter(x=>x.id!==idAttr); renderBlocked(); renderCounts(); showToast('Bloqueio removido'); });
-  }
-}
-
-// Helpers
-function id(){ return Math.random().toString(36).slice(2,9); }
-function debounce(fn, wait=200){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; }
-
-// Fake load
-function loadData(){
-  state.loading = true;
-  // show loading skeletons (simple)
-  q('#messagesTbody').innerHTML = `<tr><td colspan="5" class="px-4 py-6">Carregando...</td></tr>`;
-  setTimeout(()=>{
-    // sample data
-    state.messages = [
-      { id: id(), name: 'Maria Silva', email: 'maria@example.com', date: new Date(Date.now()-3600*1000), content: 'Olá, gostaria de saber sobre seu serviço.', read: false },
-      { id: id(), name: 'João Souza', email: 'joao@example.com', date: new Date(Date.now()-86400*1000), content: 'Obrigado pelo retorno.', read: true },
-      { id: id(), name: 'Empresa X', email: 'contato@empresa.com', date: new Date(Date.now()-3600*24*2*1000), content: 'Proposta comercial em anexo.', read: false },
-    ];
-    state.blocked = [ { id: id(), email: 'spam@bad.com', reason: 'Envio massivo', date: new Date() } ];
-    state.loading = false;
-    renderCounts(); renderMessages(); renderBlocked();
-  }, 600);
-}
-
-// Init
-document.addEventListener('DOMContentLoaded', ()=>{
-  attachEvents();
-  // activate first tab
-  qa('.tab-btn')[0].click();
-  loadData();
+const showConfirm = (message) => new Promise((resolve) => {
+  elements.confirmText.textContent = message;
+  elements.confirmOverlay.classList.remove('hidden');
+  elements.confirmOverlay.classList.add('flex');
+  const finish = (result) => {
+    elements.confirmOverlay.classList.add('hidden');
+    elements.confirmOverlay.classList.remove('flex');
+    elements.confirmOk.removeEventListener('click', confirm);
+    elements.confirmCancel.removeEventListener('click', cancel);
+    elements.confirmOverlay.removeEventListener('click', outsideClick);
+    document.removeEventListener('keydown', escape);
+    resolve(result);
+  };
+  const confirm = () => finish(true);
+  const cancel = () => finish(false);
+  const outsideClick = (event) => { if (event.target === elements.confirmOverlay) cancel(); };
+  const escape = (event) => { if (event.key === 'Escape') cancel(); };
+  elements.confirmOk.addEventListener('click', confirm);
+  elements.confirmCancel.addEventListener('click', cancel);
+  elements.confirmOverlay.addEventListener('click', outsideClick);
+  document.addEventListener('keydown', escape);
 });
+
+const updateDashboard = () => {
+  query('#countTotal').textContent = state.messages.length;
+  query('#countUnread').textContent = state.messages.filter((message) => !message.read).length;
+  query('#countRead').textContent = state.messages.filter((message) => message.read).length;
+  query('#countBlocked').textContent = state.blockedEmails.length;
+};
+
+const renderMessages = () => {
+  const nameFilter = elements.searchName.value.trim().toLowerCase();
+  const emailFilter = elements.searchEmail.value.trim().toLowerCase();
+  const statusFilter = elements.filterStatus.value;
+  const messages = state.messages.filter((message) => {
+    const matchesName = (message.name ?? '').toLowerCase().includes(nameFilter);
+    const matchesEmail = (message.email ?? '').toLowerCase().includes(emailFilter);
+    const matchesStatus = statusFilter === 'all' || (statusFilter === 'read' && message.read) || (statusFilter === 'unread' && !message.read);
+    return matchesName && matchesEmail && matchesStatus;
+  });
+  if (!messages.length) {
+    elements.messagesTable.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-text-secondary">Nenhuma mensagem encontrada</td></tr>';
+    return;
+  }
+  elements.messagesTable.innerHTML = messages.map((message) => {
+    const id = escapeHtml(getMessageId(message));
+    const readButton = message.read ? `<button data-action="view-read" data-id="${id}" aria-disabled="true" aria-label="Mensagem já lida. Exibir mensagem" style="width: 6rem; min-width: 6rem;" class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-sm rounded bg-zinc-700 text-zinc-400 cursor-pointer">Ler</button>` : `<button data-action="read" data-id="${id}" style="width: 6rem; min-width: 6rem;" class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-sm bg-accent text-white rounded">Ler</button>`;
+    return `<tr><td class="px-4 py-3 align-top"><div class="font-semibold text-text-primary">${escapeHtml(message.name)}</div></td><td class="px-4 py-3 align-top">${escapeHtml(message.email)}</td><td class="px-4 py-3 align-top">${formatDate(message.date ?? message.createdAt)}</td><td class="px-4 py-3 align-top">${message.read ? '<span class="text-sm text-text-secondary">Lida</span>' : '<span class="text-sm text-accent">Não lida</span>'}</td><td style="width: 28rem; min-width: 28rem;" class="px-4 py-3 align-top"><div style="display: grid; grid-template-columns: 6rem 9rem 5rem; gap: 0.5rem;"><button data-action="view" data-id="${id}" style="width: 6rem;" class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-sm bg-transparent border border-border rounded">Visualizar</button>${readButton}<button data-action="delete" data-id="${id}" style="width: 5rem;" class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-sm bg-red-600 text-white rounded">Excluir</button></div></td></tr>`;
+  }).join('');
+};
+
+const renderBlockedEmails = () => {
+  if (!state.blockedEmails.length) {
+    elements.blockedTable.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-text-secondary">Nenhum e-mail bloqueado</td></tr>';
+    return;
+  };
+  elements.blockedTable.innerHTML = state.blockedEmails.map((blocked) => {
+    const email = getBlockedEmail(blocked);
+    return `<tr><td class="px-4 py-3">${escapeHtml(email)}</td><td class="px-4 py-3">${escapeHtml(blocked.reason || 'Sem motivo informado')}</td><td class="px-4 py-3">${formatDate(blocked.date ?? blocked.createdAt)}</td><td class="px-4 py-3"><button data-action="unblock" data-email="${escapeHtml(email)}" class="px-3 py-1 bg-accent text-white rounded">Remover</button></td></tr>`;
+  }).join('');
+};
+
+const loadMessages = async () => {
+  try {
+    state.messages = getList(await getMessages());
+    renderMessages();
+    updateDashboard();
+  } catch (error) {
+    state.messages = [];
+    renderMessages();
+    updateDashboard();
+    showToast(error.message || 'Não foi possível carregar as mensagens.', 'error');
+  };
+};
+
+const loadBlockedEmails = async () => {
+  try {
+    state.blockedEmails = getList(await getBlockedEmails());
+    renderBlockedEmails();
+    updateDashboard();
+  } catch (error) {
+    state.blockedEmails = [];
+    renderBlockedEmails();
+    updateDashboard();
+    showToast(error.message || 'Não foi possível carregar os e-mails bloqueados.', 'error');
+  }
+};
+
+const refreshData = async () => {
+  await Promise.all([loadMessages(), loadBlockedEmails()]);
+  showToast('Dados atualizados.');
+};
+
+const handleMessageAction = async (event) => {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
+  const { action, id } = button.dataset;
+  try {
+    if (action === 'view') {
+      const message = unwrapData(await getMessageById(id));
+      openModal('Detalhes da mensagem', `<p class="text-sm"><strong>Nome:</strong> ${escapeHtml(message.name)}</p><p class="text-sm"><strong>E-mail:</strong> ${escapeHtml(message.email)}</p><p class="text-sm"><strong>Data:</strong> ${formatDate(message.date ?? message.createdAt)}</p><p class="mt-4 text-text-secondary whitespace-pre-wrap">${escapeHtml(message.content)}</p>`);
+      return;
+    }
+    if (action === 'view-read') {
+      openModal('Atenção!', '<p class="text-text-secondary">Esta mensagem já foi marcada como lida.</p>');
+      return;
+    }
+    if (action === 'read') {
+      await markAsRead(id);
+      const message = state.messages.find((item) => String(getMessageId(item)) === String(id));
+      if (message) message.read = true;
+      renderMessages();
+      updateDashboard();
+      showToast('Mensagem marcada como lida.');
+      return;
+    }
+    if (action === 'delete' && await showConfirm('Deseja excluir esta mensagem?')) {
+      await deleteMessage(id);
+      state.messages = state.messages.filter((message) => String(getMessageId(message)) !== String(id));
+      renderMessages();
+      updateDashboard();
+      showToast('Mensagem excluída.');
+    }
+  } catch (error) {
+    showToast(error.message || 'Não foi possível concluir a ação.', 'error');
+  }
+};
+
+const handleUnblock = async (event) => {
+  const button = event.target.closest('button[data-action="unblock"]');
+  if (!button || !await showConfirm(`Deseja desbloquear ${button.dataset.email}?`)) return;
+  try {
+    await unblockEmail(button.dataset.email);
+    state.blockedEmails = state.blockedEmails.filter((blocked) => getBlockedEmail(blocked) !== button.dataset.email);
+    renderBlockedEmails();
+    updateDashboard();
+    showToast('E-mail desbloqueado.');
+  } catch (error) {
+    showToast(error.message || 'Não foi possível desbloquear o e-mail.', 'error');
+  }
+};
+
+const handleBlockSubmit = async (event) => {
+  event.preventDefault();
+  const email = elements.blockEmail.value.trim();
+  const reason = elements.blockReason.value.trim();
+  if (!email) {
+    showToast('Preencha o e-mail.', 'warning');
+    elements.blockEmail.focus();
+    return;
+  }
+  if (!elements.blockEmail.checkValidity()) {
+    showToast('Informe um e-mail válido.', 'warning');
+    elements.blockEmail.focus();
+    return;
+  }
+  try {
+    await blockEmail({ email, reason: reason || 'Sem motivo informado' });
+    elements.blockForm.reset();
+    await loadBlockedEmails();
+    showToast('E-mail bloqueado.');
+  } catch (error) {
+    showToast(error.message || 'Não foi possível bloquear o e-mail.', 'error');
+  }
+};
+
+const setupTabs = () => {
+  queryAll('.tab-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      queryAll('.tab-btn').forEach((tab) => {
+        const active = tab === button;
+        tab.classList.toggle('text-accent', active);
+        tab.classList.toggle('text-text-secondary', !active);
+        tab.setAttribute('aria-selected', String(active));
+      });
+      queryAll('.tab-panel').forEach((panel) => panel.classList.toggle('hidden', panel.id !== `tab-${button.dataset.tab}`));
+    });
+  });
+};
+
+const setupEvents = () => {
+  query('#logout')?.addEventListener('click', async (event) => {
+    event.preventDefault();
+
+    if (!await showConfirm('Deseja realmente sair do painel administrativo?')) return;
+
+    try {
+      await logout();
+    } catch (error) {
+      showToast(error.message || 'Não foi possível encerrar a sessão.', 'error');
+    } finally {
+      localStorage.removeItem('token');
+      window.location.replace('login.html');
+    }
+  });
+
+  elements.searchName.addEventListener('input', renderMessages);
+  elements.searchEmail.addEventListener('input', renderMessages);
+  elements.filterStatus.addEventListener('change', renderMessages);
+  elements.messagesTable.addEventListener('click', handleMessageAction);
+  elements.blockedTable.addEventListener('click', handleUnblock);
+  elements.blockForm.addEventListener('submit', handleBlockSubmit);
+  query('#refreshBtn').addEventListener('click', refreshData);
+  query('#modalClose').addEventListener('click', closeModal);
+  elements.modalOverlay.addEventListener('click', (event) => { if (event.target === elements.modalOverlay) closeModal(); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
+};
+
+const initialize = async () => {
+  if (!hasToken) return;
+
+  setupTabs();
+  setupEvents();
+  query('.tab-btn')?.click();
+  await Promise.all([loadMessages(), loadBlockedEmails()]);
+};
+
+document.addEventListener('DOMContentLoaded', initialize);

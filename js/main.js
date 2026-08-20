@@ -1,8 +1,15 @@
+import { login } from "./services/auth.js";
+import { createMessage } from "./services/message.js";
+
 const menuBtn = document.getElementById('menu-btn');
 const mobileMenu = document.getElementById('mobile-menu');
-const menuIcon = menuBtn.querySelector('i');
 const fadeElems = document.querySelectorAll('.fade-in');
 const contactForm = document.getElementById('contact-form');
+const loginForm = document.getElementById('login-form');
+const loginError = document.getElementById('login-error');
+const loginSubmit = document.getElementById('login-submit');
+const loginSubmitText = document.getElementById('login-submit-text');
+const loginSubmitSpinner = document.getElementById('login-submit-spinner');
 const formToast = document.getElementById('form-toast');
 
 const observer = new IntersectionObserver((entries) => {
@@ -38,7 +45,7 @@ function validateFields() {
     }
 
     return null;
-}
+};
 
 function showMessage() {
     formToast.classList.remove('hidden');
@@ -46,30 +53,30 @@ function showMessage() {
     setTimeout(() => {
         formToast.classList.add('hidden');
     }, 5000);
-}
+};
 
 function createError(message) {
     return {
         message,
         icon: 'fa-solid fa-triangle-exclamation text-red-500',
     };
-}
+};
 
 function messageError(message, icon) {
     const iconElem = formToast.querySelector('i');
 
     iconElem.className = icon;
     formToast.querySelector('span').innerHTML = message;
-}
+};
 
 function messageSuccess(message) {
     const iconElem = formToast.querySelector('i');
 
     iconElem.className = 'fa-solid fa-circle-check';
     formToast.querySelector('span').innerHTML = message;
-}
+};
 
-menuBtn.addEventListener('click', () => {
+menuBtn?.addEventListener('click', () => {
     mobileMenu.classList.toggle('hidden');
     const isOpen = !mobileMenu.classList.contains('hidden');
     menuBtn.setAttribute('aria-expanded', isOpen);
@@ -89,8 +96,12 @@ document.querySelectorAll('.mobile-link').forEach(link => {
     });
 });
 
-contactForm.addEventListener('submit', (e) => {
+contactForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    const name = contactForm.name.value.trim();
+    const email = contactForm.email.value.trim();
+    const message = contactForm.message.value.trim();
 
     const error = validateFields();
 
@@ -100,11 +111,75 @@ contactForm.addEventListener('submit', (e) => {
         messageError(message, icon);
         showMessage();
         return;
-    }
+    };
 
-    messageSuccess('Mensagem enviada com sucesso! Em breve entrarei em contato.');
-    showMessage();
-    contactForm.reset();
+    try {
+        await createMessage({
+            name: name,
+            email: email,
+            content: message,
+        });
+
+        messageSuccess(
+            'Mensagem enviada com sucesso! Em breve entrarei em contato.'
+        );
+
+        showMessage();
+        contactForm.reset();
+    } catch (error) {
+        messageError(
+            error.message || 'Não foi possível enviar a mensagem.', 'fa-solid fa-triangle-exclamation text-red-500'
+        );
+
+        showMessage();
+    };
+});
+
+loginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const emailLogin = loginForm.email.value.trim();
+    const password = loginForm.password.value.trim();
+
+    loginError.classList.add('hidden');
+    loginError.textContent = '';
+
+    if (!emailLogin || !emailLogin.includes('@') || !emailLogin.includes('.')) {
+        loginError.textContent = 'Por favor, preencha um e-mail válido.';
+        loginError.classList.remove('hidden');
+
+        return;
+    };
+
+    if (!password) {
+        loginError.textContent = 'Por favor, preencha sua senha.';
+        loginError.classList.remove('hidden');
+        return;
+    };
+
+    try {
+        loginSubmit.disabled = true;
+        loginSubmitText.classList.add('hidden');
+        loginSubmitSpinner.classList.remove('hidden');
+
+        const response = await login({
+            email: emailLogin,
+            password: password,
+        });
+
+        if (response && response?.data?.token) {
+            localStorage.setItem('token', response.data.token);
+            window.location.href = 'admin.html';
+        };
+
+    } catch (error) {
+        loginError.textContent = error.message || 'Não foi possível realizar o login.';
+        loginError.classList.remove('hidden');
+    } finally {
+        loginSubmit.disabled = false;
+        loginSubmitText.classList.remove('hidden');
+        loginSubmitSpinner.classList.add('hidden');
+    };
 });
 
 

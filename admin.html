@@ -20,7 +20,7 @@
             </a>
             <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
                 <a href="index.html" class="text-text-secondary hover:text-accent transition-colors">Início</a>
-                <a href="login.html" class="px-4 py-2 bg-accent/10 border border-accent/30 text-accent-light rounded-lg text-xs hover:bg-accent hover:text-white transition-all">Sair</a>
+                <a href="#" id="logout" class="px-4 py-2 bg-accent/10 border border-accent/30 text-accent-light rounded-lg text-xs hover:bg-accent hover:text-white transition-all">Sair</a>
             </nav>
         </div>
     </header>
@@ -147,21 +147,19 @@
     </main>
 
     <!-- Modais -->
-    <div id="modalOverlay" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
-        <div id="modal" class="bg-surface border border-border rounded-2xl w-full p-6 animate-fade" style="width: calc(100% - 2rem); max-width: 42rem;">
+    <div id="modalOverlay" class="fixed inset-0 hidden items-center justify-center z-50" style="background-color: rgba(0, 0, 0, 0.82); backdrop-filter: blur(4px);">
+        <div id="modal" class="bg-surface border border-border rounded-2xl w-full p-6 animate-fade" style="width: calc(100% - 2rem); max-width: 42rem; background-color: #111214; border-color: #3f3f46; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);">
             <header class="flex items-start justify-between">
                 <h2 id="modalTitle" class="text-lg font-bold text-text-primary">Detalhes</h2>
                 <button id="modalClose" aria-label="Fechar" class="text-text-secondary hover:text-text-primary">✕</button>
             </header>
-            <div id="modalContent" class="mt-4 text-text-secondary">
-                <!-- preenchido por JS -->
-            </div>
+            <div id="modalContent" class="mt-4 text-text-secondary"></div>
         </div>
     </div>
 
     <!-- Confirm Modal -->
-    <div id="confirmOverlay" class="fixed inset-0 hidden items-center justify-center z-50" style="background-color: rgba(0, 0, 0, 0.72); backdrop-filter: blur(3px);">
-        <div class="bg-surface border border-border rounded-2xl w-full p-6" style="width: calc(100% - 2rem); max-width: 28rem; background-color: #111214; border-color: #303036; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);">
+    <div id="confirmOverlay" class="fixed inset-0 hidden items-center justify-center z-50" style="background-color: rgba(0, 0, 0, 0.82); backdrop-filter: blur(4px);">
+        <div class="bg-surface border border-border rounded-2xl w-full p-6" style="width: calc(100% - 2rem); max-width: 28rem; background-color: #111214; border-color: #3f3f46; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);">
             <p id="confirmText" class="text-text-primary">Tem certeza?</p>
             <div class="mt-4 flex justify-end gap-2">
                 <button id="confirmCancel" class="px-4 py-2 bg-background border border-border rounded-md">Cancelar</button>
@@ -170,9 +168,8 @@
         </div>
     </div>
 
-    <!-- Toasts -->
     <div id="toasts" class="fixed space-y-2 z-50" style="right: 1rem; top: 5rem; width: min(22rem, calc(100% - 2rem));" aria-live="polite"></div>
 
-    <script src="js/admin.js" defer></script>
+    <script type="module" src="js/admin.js" defer></script>
 </body>
 </html>
