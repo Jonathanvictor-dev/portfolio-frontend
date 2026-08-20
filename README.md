@@ -22,7 +22,13 @@ Principais recursos disponibilizados pela API:
 
 ## 🌐 Deploy
 
+O projeto está disponível em produção nos links abaixo:
+
+### Frontend
 https://jonathanvictor-dev.github.io/portfolio-frontend
+
+### Backend
+https://portfolio-contato-api-production.up.railway.app
 
 ## 🛠️ Tecnologias e Ferramentas
 
