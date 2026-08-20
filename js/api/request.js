@@ -1,4 +1,8 @@
-const API_URL = 'http://localhost:3004';
+const API_URL =
+  location.hostname === 'localhost' ||
+  location.hostname === '127.0.0.1'
+    ? 'http://localhost:3004'
+    : 'https://portfolio-contato-api-production.up.railway.app';
 
 export const request = async (endpoint, { method = 'GET', body, headers = {} } = {}) => {
   const token = localStorage.getItem('token');
