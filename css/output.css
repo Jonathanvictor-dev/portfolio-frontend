@@ -1865,6 +1865,10 @@ body {
 }
 
 @media (min-width: 640px) {
+  .sm\:block {
+    display: block;
+  }
+
   .sm\:h-80 {
     height: 20rem;
   }

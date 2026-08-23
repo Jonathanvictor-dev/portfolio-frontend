@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="scroll-smooth">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -8,20 +9,32 @@
     <link rel="stylesheet" href="css/output.css">
     <link rel="shortcut icon" href="assets/favicons/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 </head>
+
 <body class="bg-background text-text-primary selection:bg-accent selection:text-white">
 
-    <header class="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-border/60" role="banner">
+    <header class="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-border/60"
+        role="banner">
         <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
             <a href="index.html" class="text-xl font-extrabold tracking-tight flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-accent"></span>
                 <span>Jonathanvictor<span class="text-accent font-medium">-dev</span></span>
             </a>
             <nav class="flex items-center gap-8 text-sm font-medium">
-                <a href="index.html" class="hidden md:block text-text-secondary hover:text-accent transition-colors">Início</a>
-                <a href="#" id="change-password" class="hidden md:block text-text-secondary hover:text-accent transition-colors">Alterar senha</a>
-                <a href="#" id="logout" class="px-4 py-2 bg-accent/10 border border-accent/30 text-accent-light rounded-lg text-xs hover:bg-accent hover:text-white transition-all">Sair</a>
+                <a href="index.html" class="hidden sm:block text-text-secondary hover:text-accent transition-colors">
+                    Início
+                </a>
+
+                <a href="#" id="change-password"
+                    class="hidden sm:block text-text-secondary hover:text-accent transition-colors">
+                    Alterar senha
+                </a>
+                <a href="#" id="logout"
+                    class="px-4 py-2 bg-accent/10 border border-accent/30 text-accent-light rounded-lg text-xs hover:bg-accent hover:text-white transition-all">
+                    Sair
+                </a>
             </nav>
         </div>
     </header>
@@ -33,10 +46,12 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-black">Painel Administrativo</h1>
-                    <p class="text-text-secondary mt-1">Visão geral das mensagens e gerenciamento de e-mails bloqueados</p>
+                    <p class="text-text-secondary mt-1">Visão geral das mensagens e gerenciamento de e-mails bloqueados
+                    </p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button id="refreshBtn" class="px-4 py-2 bg-accent hover:bg-accent-light text-white font-medium rounded-lg transition">Atualizar</button>
+                    <button id="refreshBtn"
+                        class="px-4 py-2 bg-accent hover:bg-accent-light text-white font-medium rounded-lg transition">Atualizar</button>
                 </div>
             </div>
 
@@ -44,22 +59,30 @@
             <section class="mb-8">
                 <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
                     <article class="bg-surface border border-border rounded-2xl p-6 flex flex-col justify-center">
-                        <h3 class="flex items-center gap-2 text-xs font-bold uppercase" style="color:#1d4ed8"><i class="fa-solid fa-envelope" style="font-size: 1.125rem; flex-shrink: 0;" aria-hidden="true"></i>Total de Mensagens</h3>
+                        <h3 class="flex items-center gap-2 text-xs font-bold uppercase" style="color:#1d4ed8"><i
+                                class="fa-solid fa-envelope" style="font-size: 1.125rem; flex-shrink: 0;"
+                                aria-hidden="true"></i>Total de Mensagens</h3>
                         <p class="text-center text-3xl font-black mt-2 text-text-primary" id="countTotal">--</p>
                     </article>
 
                     <article class="bg-surface border border-border rounded-2xl p-6 flex flex-col justify-center">
-                        <h3 class="flex items-center gap-2 text-xs font-bold uppercase" style="color:#f59e0b"><i class="fa-solid fa-envelope-open-text" style="font-size: 1.125rem; flex-shrink: 0;" aria-hidden="true"></i>Mensagens Não Lidas</h3>
+                        <h3 class="flex items-center gap-2 text-xs font-bold uppercase" style="color:#f59e0b"><i
+                                class="fa-solid fa-envelope-open-text" style="font-size: 1.125rem; flex-shrink: 0;"
+                                aria-hidden="true"></i>Mensagens Não Lidas</h3>
                         <p class="text-center text-3xl font-black mt-2 text-text-primary" id="countUnread">--</p>
                     </article>
 
                     <article class="bg-surface border border-border rounded-2xl p-6 flex flex-col justify-center">
-                        <h3 class="flex items-center gap-2 text-xs font-bold uppercase" style="color:#10b981"><i class="fa-solid fa-circle-check" style="font-size: 1.125rem; flex-shrink: 0;" aria-hidden="true"></i>Mensagens Lidas</h3>
+                        <h3 class="flex items-center gap-2 text-xs font-bold uppercase" style="color:#10b981"><i
+                                class="fa-solid fa-circle-check" style="font-size: 1.125rem; flex-shrink: 0;"
+                                aria-hidden="true"></i>Mensagens Lidas</h3>
                         <p class="text-center text-3xl font-black mt-2 text-text-primary" id="countRead">--</p>
                     </article>
 
                     <article class="bg-surface border border-border rounded-2xl p-6 flex flex-col justify-center">
-                        <h3 class="flex items-center gap-2 text-xs font-bold uppercase" style="color:#7c3aed"><i class="fa-solid fa-lock" style="font-size: 1.125rem; flex-shrink: 0;" aria-hidden="true"></i>E-mails Bloqueados</h3>
+                        <h3 class="flex items-center gap-2 text-xs font-bold uppercase" style="color:#7c3aed"><i
+                                class="fa-solid fa-lock" style="font-size: 1.125rem; flex-shrink: 0;"
+                                aria-hidden="true"></i>E-mails Bloqueados</h3>
                         <p class="text-center text-3xl font-black mt-2 text-text-primary" id="countBlocked">--</p>
                     </article>
                 </div>
@@ -68,8 +91,10 @@
             <!-- Tabs -->
             <section class="mb-6">
                 <div class="flex gap-2 border-b border-border mb-4">
-                    <button class="tab-btn px-4 py-2 text-sm font-medium text-accent bg-transparent" data-tab="messages" aria-selected="true">Mensagens</button>
-                    <button class="tab-btn px-4 py-2 text-sm font-medium text-text-secondary bg-transparent" data-tab="blocked" aria-selected="false">E-mails Bloqueados</button>
+                    <button class="tab-btn px-4 py-2 text-sm font-medium text-accent bg-transparent" data-tab="messages"
+                        aria-selected="true">Mensagens</button>
+                    <button class="tab-btn px-4 py-2 text-sm font-medium text-text-secondary bg-transparent"
+                        data-tab="blocked" aria-selected="false">E-mails Bloqueados</button>
                 </div>
 
                 <!-- Mensagens -->
@@ -77,11 +102,14 @@
                     <div class="bg-surface border border-border rounded-2xl p-4">
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                             <div class="flex items-center gap-2 w-full md:w-1/2">
-                                <input id="searchName" type="search" placeholder="Buscar por nome" class="w-full px-3 py-2 rounded-md bg-background border border-border text-text-primary placeholder:text-text-secondary focus:outline-none" />
+                                <input id="searchName" type="search" placeholder="Buscar por nome"
+                                    class="w-full px-3 py-2 rounded-md bg-background border border-border text-text-primary placeholder:text-text-secondary focus:outline-none" />
                             </div>
                             <div class="flex items-center gap-2 w-full md:w-1/2 justify-end">
-                                <input id="searchEmail" type="search" placeholder="Buscar por e-mail" class="w-full md:w-1/2 px-3 py-2 rounded-md bg-background border border-border text-text-primary placeholder:text-text-secondary focus:outline-none" />
-                                <select id="filterStatus" class="px-3 py-2 rounded-md bg-background border border-border text-text-primary">
+                                <input id="searchEmail" type="search" placeholder="Buscar por e-mail"
+                                    class="w-full md:w-1/2 px-3 py-2 rounded-md bg-background border border-border text-text-primary placeholder:text-text-secondary focus:outline-none" />
+                                <select id="filterStatus"
+                                    class="px-3 py-2 rounded-md bg-background border border-border text-text-primary">
                                     <option value="all">Todas</option>
                                     <option value="read">Lidas</option>
                                     <option value="unread">Não Lidas</option>
@@ -89,7 +117,8 @@
                             </div>
                         </div>
 
-                        <div id="messagesTableWrap" class="overflow-x-auto" style="max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <div id="messagesTableWrap" class="overflow-x-auto"
+                            style="max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
                             <table class="w-full text-left table-auto" style="min-width: 46rem;">
                                 <thead>
                                     <tr class="text-text-secondary text-xs uppercase">
@@ -114,18 +143,23 @@
                         <form id="blockForm" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                             <div class="md:col-span-2">
                                 <label class="text-sm text-text-primary">E-mail</label>
-                                <input id="blockEmail" type="email" required placeholder="exemplo@dominio.com" class="w-full px-3 py-2 rounded-md bg-background border border-border text-text-primary" />
+                                <input id="blockEmail" type="email" required placeholder="exemplo@dominio.com"
+                                    class="w-full px-3 py-2 rounded-md bg-background border border-border text-text-primary" />
                             </div>
                             <div>
                                 <label class="text-sm text-text-primary">Motivo</label>
-                                <input id="blockReason" type="text" placeholder="Motivo do bloqueio" class="w-full px-3 py-2 rounded-md bg-background border border-border text-text-primary" />
+                                <input id="blockReason" type="text" placeholder="Motivo do bloqueio"
+                                    class="w-full px-3 py-2 rounded-md bg-background border border-border text-text-primary" />
                             </div>
                             <div class="md:col-span-3 flex justify-end">
-                                <button type="submit" class="px-4 py-2 bg-accent hover:bg-accent-light text-white rounded-md">Bloquear E-mail</button>
+                                <button type="submit"
+                                    class="px-4 py-2 bg-accent hover:bg-accent-light text-white rounded-md">Bloquear
+                                    E-mail</button>
                             </div>
                         </form>
 
-                        <div class="overflow-x-auto" style="max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <div class="overflow-x-auto"
+                            style="max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
                             <table class="w-full text-left table-auto" style="min-width: 38rem;">
                                 <thead>
                                     <tr class="text-text-secondary text-xs uppercase">
@@ -148,29 +182,37 @@
     </main>
 
     <!-- Modais -->
-    <div id="modalOverlay" class="fixed inset-0 hidden items-center justify-center z-50" style="background-color: rgba(0, 0, 0, 0.82); backdrop-filter: blur(4px);">
-        <div id="modal" class="bg-surface border border-border rounded-2xl w-full p-6 animate-fade" style="width: calc(100% - 2rem); max-width: 42rem; background-color: #111214; border-color: #3f3f46; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);">
+    <div id="modalOverlay" class="fixed inset-0 hidden items-center justify-center z-50"
+        style="background-color: rgba(0, 0, 0, 0.82); backdrop-filter: blur(4px);">
+        <div id="modal" class="bg-surface border border-border rounded-2xl w-full p-6 animate-fade"
+            style="width: calc(100% - 2rem); max-width: 42rem; background-color: #111214; border-color: #3f3f46; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);">
             <header class="flex items-start justify-between">
                 <h2 id="modalTitle" class="text-lg font-bold text-text-primary">Detalhes</h2>
-                <button id="modalClose" aria-label="Fechar" class="text-text-secondary hover:text-text-primary">✕</button>
+                <button id="modalClose" aria-label="Fechar"
+                    class="text-text-secondary hover:text-text-primary">✕</button>
             </header>
             <div id="modalContent" class="mt-4 text-text-secondary"></div>
         </div>
     </div>
 
     <!-- Confirm Modal -->
-    <div id="confirmOverlay" class="fixed inset-0 hidden items-center justify-center z-50" style="background-color: rgba(0, 0, 0, 0.82); backdrop-filter: blur(4px);">
-        <div class="bg-surface border border-border rounded-2xl w-full p-6" style="width: calc(100% - 2rem); max-width: 28rem; background-color: #111214; border-color: #3f3f46; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);">
+    <div id="confirmOverlay" class="fixed inset-0 hidden items-center justify-center z-50"
+        style="background-color: rgba(0, 0, 0, 0.82); backdrop-filter: blur(4px);">
+        <div class="bg-surface border border-border rounded-2xl w-full p-6"
+            style="width: calc(100% - 2rem); max-width: 28rem; background-color: #111214; border-color: #3f3f46; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);">
             <p id="confirmText" class="text-text-primary">Tem certeza?</p>
             <div class="mt-4 flex justify-end gap-2">
-                <button id="confirmCancel" class="px-4 py-2 bg-background border border-border rounded-md">Cancelar</button>
+                <button id="confirmCancel"
+                    class="px-4 py-2 bg-background border border-border rounded-md">Cancelar</button>
                 <button id="confirmOk" class="px-4 py-2 bg-accent text-white rounded-md">Confirmar</button>
             </div>
         </div>
     </div>
 
-    <div id="toasts" class="fixed space-y-2 z-50" style="right: 1rem; top: 5rem; width: min(22rem, calc(100% - 2rem));" aria-live="polite"></div>
+    <div id="toasts" class="fixed space-y-2 z-50" style="right: 1rem; top: 5rem; width: min(22rem, calc(100% - 2rem));"
+        aria-live="polite"></div>
 
     <script type="module" src="js/admin.js" defer></script>
 </body>
+
 </html>
