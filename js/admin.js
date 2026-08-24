@@ -9,6 +9,7 @@ if (!hasToken) {
 };
 
 const state = { messages: [], blockedEmails: [] };
+let isRefreshing = false;
 const query = (selector) => document.querySelector(selector);
 const queryAll = (selector) => Array.from(document.querySelectorAll(selector));
 const elements = {
@@ -17,7 +18,8 @@ const elements = {
   blockEmail: query('#blockEmail'), blockReason: query('#blockReason'), modalOverlay: query('#modalOverlay'),
   modalTitle: query('#modalTitle'), modalContent: query('#modalContent'), confirmOverlay: query('#confirmOverlay'),
   confirmText: query('#confirmText'), confirmCancel: query('#confirmCancel'), confirmOk: query('#confirmOk'),
-  toasts: query('#toasts'),
+  toasts: query('#toasts'), refreshButton: query('#refreshBtn'), refreshLabel: query('#refreshLabel'),
+  refreshSpinner: query('#refreshSpinner'),
 };
 
 const escapeHtml = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -145,9 +147,27 @@ const loadBlockedEmails = async () => {
   }
 };
 
+const setRefreshLoading = (isLoading) => {
+  elements.refreshButton.disabled = isLoading;
+  elements.refreshButton.setAttribute('aria-busy', String(isLoading));
+  elements.refreshLabel.textContent = isLoading ? 'Atualizando...' : 'Atualizar';
+  elements.refreshSpinner.style.display = isLoading ? 'inline-block' : 'none';
+  elements.refreshButton.style.backgroundColor = isLoading ? '#71717a' : '';
+  elements.refreshButton.style.pointerEvents = isLoading ? 'none' : '';
+  elements.refreshButton.style.cursor = isLoading ? 'not-allowed' : '';
+};
+
 const refreshData = async () => {
-  await Promise.all([loadMessages(), loadBlockedEmails()]);
-  showToast('Dados atualizados.');
+  if (isRefreshing) return;
+  isRefreshing = true;
+  setRefreshLoading(true);
+  try {
+    await Promise.all([loadMessages(), loadBlockedEmails()]);
+    showToast('Dados atualizados.');
+  } finally {
+    setRefreshLoading(false);
+    isRefreshing = false;
+  }
 };
 
 const handleMessageAction = async (event) => {
@@ -286,7 +306,7 @@ const setupEvents = () => {
   elements.messagesTable.addEventListener('click', handleMessageAction);
   elements.blockedTable.addEventListener('click', handleUnblock);
   elements.blockForm.addEventListener('submit', handleBlockSubmit);
-  query('#refreshBtn').addEventListener('click', refreshData);
+  elements.refreshButton.addEventListener('click', refreshData);
   query('#modalClose').addEventListener('click', closeModal);
   elements.modalOverlay.addEventListener('click', (event) => { if (event.target === elements.modalOverlay) closeModal(); });
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
